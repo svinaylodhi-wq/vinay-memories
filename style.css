@@ -1,1 +1,112 @@
+* {
+    box-sizing: border-box;
+}
 
+body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: Arial, sans-serif;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    background:
+        linear-gradient(
+            135deg,
+            #667eea,
+            #764ba2
+        );
+}
+
+.card {
+    width: 92%;
+    max-width: 450px;
+
+    background: white;
+
+    padding: 30px;
+    border-radius: 25px;
+
+    text-align: center;
+
+    box-shadow:
+        0 15px 40px rgba(0,0,0,0.25);
+}
+
+.icon {
+    font-size: 60px;
+}
+
+h1 {
+    margin: 10px 0;
+    font-size: 32px;
+}
+
+.subtitle {
+    color: #666;
+    line-height: 1.5;
+}
+
+.memory {
+    margin: 25px 0;
+
+    padding: 18px;
+
+    background: #f5f5f5;
+
+    border-radius: 15px;
+
+    color: #555;
+}
+
+.location-box {
+    margin-top: 20px;
+
+    padding: 20px;
+
+    background: #fafafa;
+
+    border-radius: 18px;
+}
+
+.location-box h3 {
+    margin-top: 0;
+}
+
+.location-box p {
+    color: #666;
+    line-height: 1.5;
+}
+
+button {
+    width: 100%;
+
+    padding: 14px;
+
+    margin-top: 10px;
+
+    border: none;
+    border-radius: 10px;
+
+    font-size: 16px;
+    font-weight: bold;
+
+    cursor: pointer;
+
+    background: #667eea;
+    color: white;
+}
+
+button:hover {
+    opacity: 0.9;
+}
+
+.stop {
+    background: #e74c3c;
+}
+
+#status {
+    margin-top: 15px;
+    font-weight: bold;
+}
