@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0">
+
+    <title>Vinay Location Dashboard</title>
+
+    <link
+        rel="stylesheet"
+        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+
+    <style>
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f3f4f6;
+        }
+
+        header {
+            background: #111827;
+            color: white;
+            padding: 18px;
+            text-align: center;
+        }
+
+        #info {
+            background: white;
+            padding: 15px;
+            text-align: center;
+        }
+
+        #map {
+            height: calc(100vh - 140px);
+            width: 100%;
+        }
+
+        .online {
+            color: green;
+            font-weight: bold;
+        }
+
+        .offline {
+            color: red;
+            font-weight: bold;
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+<header>
+    <h2>📍 Vinay Live Location</h2>
+</header>
+
+
+<div id="info">
+
+    <div id="status">
+        Connecting...
+    </div>
+
+    <div id="coordinates">
+        Waiting for location...
+    </div>
+
+</div>
+
+
+<div id="map"></div>
+
+
+<script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">
+</script>
+
+
+<script
+    src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js">
+</script>
+
+
+<script
+    src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js">
+</script>
+
+
+<script>
+
+
+// ==========================================
+// FIREBASE CONFIG
+// USE THE SAME CONFIG AS app.js
+// ==========================================
+
+const firebaseConfig = {
+
+    apiKey: "YOUR_API_KEY",
+
+    authDomain:
+        "YOUR_PROJECT.firebaseapp.com",
+
+    databaseURL:
+        "https://YOUR_PROJECT-default-rtdb.firebaseio.com",
+
+    projectId:
+        "YOUR_PROJECT",
+
+    storageBucket:
+        "YOUR_PROJECT.appspot.com",
+
+    messagingSenderId:
+        "YOUR_SENDER_ID",
+
+    appId:
+        "YOUR_APP_ID"
+};
+
+
+firebase.initializeApp(firebaseConfig);
+
+
+const database =
+    firebase.database();
+
+
+// ==========================================
+// GET ID
+// ==========================================
+
+const params =
+    new URLSearchParams(
+        window.location.search
+    );
+
+
+const trackingId =
+    params.get("id");
+
+
+if (!trackingId) {
+
+    document.getElementById("status")
+        .innerText =
+        "Tracking ID missing.";
+
+}
+
+
+// ==========================================
+// MAP
+// ==========================================
+
+const map =
+    L.map("map")
+     .setView(
+         [28.6139, 77.2090],
+         10
+     );
+
+
+L.tileLayer(
+    "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+    {
+        attribution:
+            "&copy; OpenStreetMap contributors"
+    }
+).addTo(map);
+
+
+let marker = null;
+
+
+// ==========================================
+// REAL-TIME LOCATION
+// ==========================================
+
+if (trackingId) {
+
+    database
+        .ref("locations/" + trackingId)
+        .on("value", function(snapshot) {
+
+            const data =
+                snapshot.val();
+
+
+            if (!data) {
+
+                document.getElementById("status")
+                    .innerText =
+                    "Waiting for location...";
+
+                return;
+            }
+
+
+            if (data.sharing === true) {
+
+                document.getElementById("status")
+                    .innerHTML =
+                    '<span class="online">🟢 LIVE</span>';
+
+            } else {
+
+                document.getElementById("status")
+                    .innerHTML =
+                    '<span class="offline">🔴 OFFLINE</span>';
+            }
+
+
+            document.getElementById("coordinates")
+                .innerText =
+                "Lat: " +
+                data.latitude +
+                " | Long: " +
+                data.longitude;
+
+
+            const location = [
+
+                data.latitude,
+
+                data.longitude
+            ];
+
+
+            if (!marker) {
+
+                marker =
+                    L.marker(location)
+                    .addTo(map)
+                    .bindPopup(
+                        "Live Location"
+                    );
+
+            } else {
+
+                marker.setLatLng(location);
+            }
+
+
+            map.setView(
+                location,
+                16
+            );
+
+        });
+
+}
+
+</script>
+
+</body>
+</html>
