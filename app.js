@@ -1,16 +1,31 @@
 // ==========================================
-// FIREBASE CONFIGURATION
+// VINAY MEMORIES - FIREBASE LOCATION DEMO
 // ==========================================
 
+// Firebase configuration
 const firebaseConfig = {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "YOUR_PROJECT.firebaseapp.com",
-    databaseURL: "https://YOUR_PROJECT-default-rtdb.firebaseio.com",
-    projectId: "YOUR_PROJECT",
-    storageBucket: "YOUR_PROJECT.appspot.com",
-    messagingSenderId: "YOUR_SENDER_ID",
-    appId: "YOUR_APP_ID"
+    apiKey: "AIzaSyAZj0FHYJJoYfrvERWkp7HIB9YxxtU5Xyk",
+
+    authDomain: "vinay-memories.firebaseapp.com",
+
+    databaseURL:
+        "https://vinay-memories-default-rtdb.firebaseio.com",
+
+    projectId: "vinay-memories",
+
+    storageBucket:
+        "vinay-memories.firebasestorage.app",
+
+    messagingSenderId: "224250798294",
+
+    appId:
+        "1:224250798294:web:92550f85dc8e09e9f8e977"
 };
+
+
+// ==========================================
+// START FIREBASE
+// ==========================================
 
 firebase.initializeApp(firebaseConfig);
 
@@ -18,31 +33,32 @@ const database = firebase.database();
 
 
 // ==========================================
-// GET TRACKING ID FROM URL
+// GET DEMO ID FROM URL
 // Example:
-// index.html?id=VINAY123
+// ?id=VINAY123
 // ==========================================
 
-const urlParams = new URLSearchParams(window.location.search);
+const urlParams =
+    new URLSearchParams(window.location.search);
 
-let trackingId = urlParams.get("id");
+let trackingId =
+    urlParams.get("id");
 
 
-// If no ID exists, create a random demo ID
+// If ID is not provided, create one
 if (!trackingId) {
 
     trackingId =
         "MEMORY-" +
         Math.random()
-        .toString(36)
-        .substring(2, 8)
-        .toUpperCase();
-
+            .toString(36)
+            .substring(2, 8)
+            .toUpperCase();
 }
 
 
 // ==========================================
-// ELEMENTS
+// PAGE ELEMENTS
 // ==========================================
 
 const shareBtn =
@@ -56,31 +72,43 @@ const status =
 
 
 // ==========================================
-// LOCATION WATCH
+// LOCATION WATCH ID
 // ==========================================
 
 let watchId = null;
 
 
 // ==========================================
-// START LOCATION SHARING
+// SHARE LOCATION
 // ==========================================
 
 shareBtn.addEventListener("click", function () {
 
+    // Prevent multiple watches
+    if (watchId !== null) {
+
+        status.innerText =
+            "🟢 Location sharing is already ON";
+
+        return;
+    }
+
+
+    // Check browser GPS support
     if (!navigator.geolocation) {
 
         status.innerText =
-            "GPS is not supported on this device.";
+            "❌ GPS is not supported on this device.";
 
         return;
     }
 
 
     status.innerText =
-        "Requesting location permission...";
+        "📍 Requesting location permission...";
 
 
+    // Browser asks user for permission
     watchId =
         navigator.geolocation.watchPosition(
 
@@ -96,7 +124,8 @@ shareBtn.addEventListener("click", function () {
                     position.coords.accuracy;
 
 
-                const data = {
+                // Data sent to Firebase
+                const locationData = {
 
                     latitude: latitude,
 
@@ -104,21 +133,33 @@ shareBtn.addEventListener("click", function () {
 
                     accuracy: accuracy,
 
-                    updatedAt:
-                        firebase.database.ServerValue.TIMESTAMP,
+                    sharing: true,
 
-                    sharing: true
+                    updatedAt:
+                        firebase.database
+                            .ServerValue.TIMESTAMP
                 };
 
 
                 // Save location
                 database
                     .ref("locations/" + trackingId)
-                    .set(data);
+                    .set(locationData)
 
+                    .then(function () {
 
-                status.innerText =
-                    "🟢 Location sharing is ON";
+                        status.innerText =
+                            "🟢 Location sharing is ON";
+
+                    })
+
+                    .catch(function (error) {
+
+                        console.error(error);
+
+                        status.innerText =
+                            "❌ Firebase database error.";
+                    });
 
 
                 console.log(
@@ -130,15 +171,41 @@ shareBtn.addEventListener("click", function () {
                     "Longitude:",
                     longitude
                 );
+
             },
 
 
             function (error) {
 
-                console.log(error);
+                console.error(
+                    "Location Error:",
+                    error
+                );
 
-                status.innerText =
-                    "❌ Location permission was not granted.";
+
+                if (error.code === 1) {
+
+                    status.innerText =
+                        "❌ Location permission denied.";
+
+                } else if (error.code === 2) {
+
+                    status.innerText =
+                        "❌ Location unavailable.";
+
+                } else if (error.code === 3) {
+
+                    status.innerText =
+                        "❌ Location request timed out.";
+
+                } else {
+
+                    status.innerText =
+                        "❌ Unable to get location.";
+                }
+
+
+                watchId = null;
             },
 
 
@@ -155,11 +222,12 @@ shareBtn.addEventListener("click", function () {
 
 
 // ==========================================
-// STOP SHARING
+// STOP LOCATION SHARING
 // ==========================================
 
 stopBtn.addEventListener("click", function () {
 
+    // Stop browser GPS watch
     if (watchId !== null) {
 
         navigator.geolocation.clearWatch(
@@ -170,6 +238,7 @@ stopBtn.addEventListener("click", function () {
     }
 
 
+    // Tell Firebase sharing has stopped
     database
         .ref("locations/" + trackingId)
         .update({
@@ -177,10 +246,24 @@ stopBtn.addEventListener("click", function () {
             sharing: false,
 
             stoppedAt:
-                firebase.database.ServerValue.TIMESTAMP
+                firebase.database
+                    .ServerValue.TIMESTAMP
+
+        })
+
+        .then(function () {
+
+            status.innerText =
+                "🔴 Location sharing is OFF";
+
+        })
+
+        .catch(function (error) {
+
+            console.error(error);
+
+            status.innerText =
+                "Location stopped, but database update failed.";
         });
 
-
-    status.innerText =
-        "🔴 Location sharing is OFF";
 });
